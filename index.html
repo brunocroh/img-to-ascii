@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Image to ascii</title>
+    <link rel="stylesheet" type="image/png" href="data:image/png;base64,-" />
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <div class="painel">
+      <h1>Choose an img:</h1>
+      <input id="input-img" type="file" accept="image/jpeg, image/png" />
+    </div>
+
+    <div class="area">
+      <img id="img" src="edward.jpg" height="400" alt="" />
+    </div>
+
+    <div class="controls">
+      <button id="convert" class="btn">Convert</button>
+      <button id="reset" class="btn">Reset</button>
+      <button id="grays" class="btn">Print</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
