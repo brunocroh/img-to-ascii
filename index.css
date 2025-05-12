@@ -3,9 +3,16 @@ body {
   flex-direction: column;
   gap: 4px;
   font-family: "Courier New", monospace;
-  letter-spacing: 2px;
-  font-size: 20px;
+  font-size: 10px;
+  line-height: 0.05em;
+  background-color: black;
+  color: white;
 }
+
+div#output {
+  width: 4200px;
+}
+
 .controls {
   display: flex;
   flex-direction: row;
