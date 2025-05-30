@@ -2,6 +2,8 @@ const input = document.querySelector("#input-img");
 const btnConvert = document.querySelector("#convert");
 const btnReset = document.querySelector("#reset");
 const btnPrint = document.querySelector("#grays");
+const btnDownscale = document.querySelector("#downscale");
+
 const img = document.querySelector("#img");
 const ouput = document.querySelector("#output");
 const ogImage = img.src;
@@ -10,7 +12,7 @@ let asciImg = [];
 
 const MAX_VALUE = 255;
 
-const asciiTableSimple = `.'${"`"}^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$`;
+const asciiTableSimple = `.:-=+*#%@`;
 const asciiTableSize = asciiTableSimple.length;
 
 const imageToCanvas = () => {
@@ -20,6 +22,24 @@ const imageToCanvas = () => {
 
   const width = image.naturalWidth || image.width;
   const height = image.naturalHeight || image.height;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  context.drawImage(image, 0, 0);
+
+  return {
+    canvas,
+    context,
+    width,
+    height,
+  };
+};
+
+const newCanvas = (width, height) => {
+  const image = new Image();
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
 
   canvas.width = width;
   canvas.height = height;
@@ -52,14 +72,32 @@ btnConvert.addEventListener("click", () => {
 
   const data = image.data;
 
-  console.log({ width, height });
-
   blackWhiteFilter(data);
   toAscii(data, width);
   renderAscii(width);
 
   context.putImageData(image, 0, 0);
   img.src = canvas.toDataURL("image/jpeg");
+});
+
+btnDownscale.addEventListener("click", () => {
+  const { canvas, context, width, height } = imageToCanvas();
+  const image = context.getImageData(0, 0, width, height);
+
+  const newRatio = Math.ceil(width / 360);
+
+  const nWidth = Math.round(width / newRatio);
+  const nHeight = Math.round(height / newRatio);
+
+  const { context: newContext, canvas: _canvas } = newCanvas(nWidth, nHeight);
+  const newImage = newContext.getImageData(0, 0, nWidth, nHeight);
+
+  downscale(image, newImage, newRatio, nWidth);
+  toAscii(newImage.data, nWidth);
+  renderAscii(nWidth);
+
+  newContext.putImageData(newImage, 0, 0);
+  img.src = _canvas.toDataURL("image/jpeg");
 });
 
 btnReset.addEventListener("click", () => {
@@ -69,6 +107,20 @@ btnReset.addEventListener("click", () => {
 btnPrint.addEventListener("click", () => {
   renderAsciiArt(480, 360);
 });
+
+const downscale = (oldImage, newImage, ratio) => {
+  let line = 1;
+  for (let i = 0, j = 0; i < newImage.data.length; i += 4) {
+    j = i * ratio + line * oldImage.width * 4;
+    newImage.data[i] = oldImage.data[j];
+    newImage.data[i + 1] = oldImage.data[j + 1];
+    newImage.data[i + 2] = oldImage.data[j + 2];
+    newImage.data[i + 3] = oldImage.data[j + 3];
+    if ((i / 4) % newImage.width === 0) {
+      line++;
+    }
+  }
+};
 
 const blackWhiteFilter = (data) => {
   for (let i = 0; i < data.length; i += 4) {
@@ -80,7 +132,7 @@ const blackWhiteFilter = (data) => {
 };
 
 const toAscii = (data) => {
-  for (let i = 0, j = 0; i < data.length; i += 8, j++) {
+  for (let i = 0, j = 0; i < data.length; i += 4, j++) {
     const pixelColor = data[i];
     const asciiChar = Math.round((pixelColor / MAX_VALUE) * asciiTableSize);
     asciImg[j] = asciiTableSimple.at(asciiChar);
@@ -94,13 +146,13 @@ const renderAscii = (width) => {
   const total = [];
 
   for (let i = 0, n = 0; i < asciImg.length; i++) {
-    if (n === width / 2) {
+    if (n === width) {
       const p = document.createElement("p");
 
       p.innerText = line.join("");
       line = [];
       n = 0;
-      i += width / 2;
+      i += width;
       div.append(p);
     }
 
